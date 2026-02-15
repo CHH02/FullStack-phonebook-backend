@@ -27,14 +27,15 @@ app.get('/info', (request, response) => {
 
 app.get('/api/persons/:id', (request, response) => {
     const id = request.params.id
-    const person = persons.find(person => person.id === id)
-    
   
-    if (person) {
-      response.json(person)
-    } else {
-      response.status(404).end()
-    }
+    Person.findById(id)
+        .then((person) => {
+            response.json(person)
+        })
+        .catch((error) => {
+            console.log('error finding person by ID:', error.message);
+            response.status(404).end()
+        })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
@@ -61,15 +62,14 @@ app.post('/api/persons', (request, response) => {
         })
     }
   
-    const person = {
+    const person = new Person({
       name: body.name,
-      number: body.number,
-      id: String(Math.trunc(Math.random() * 1000)),
-    }
-  
-    persons = persons.concat(person)
-  
-    response.json(person)
+      number: body.number
+    })
+    
+    person.save().then((savedPerson) => {
+        response.json(savedPerson)
+    })
 })
 
 const PORT = process.env.PORT
