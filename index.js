@@ -20,10 +20,12 @@ app.get('/api/persons', (request, response) => {
 })
 
 app.get('/info', (request, response) => {
-    response.send(`
-            <p>Phonebook has info for ${persons.length} ${(persons.length === 1) ? 'person' : 'people'}</p>
-            <p>${Date(Date.now()).toString()}</p>
-    `)
+    Person.find({}).then((perons) => {
+        response.send(`
+                <p>Phonebook has info for ${persons.length} ${(persons.length === 1) ? 'person' : 'people'}</p>
+                <p>${Date(Date.now()).toString()}</p>
+        `)
+    })
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
@@ -34,9 +36,9 @@ app.get('/api/persons/:id', (request, response, next) => {
             response.json(person)
         })
         .catch((error) => {
-            error.status(404)
             next(error)
             console.log('error finding person by ID:', error.message);
+            response.status(404).end()
         })
 })
 
@@ -75,6 +77,25 @@ app.post('/api/persons', (request, response) => {
         response.json(savedPerson)
     })
 })
+
+app.put('/api/persons/:id', (request, response, next) => {
+    const { name, number } = request.body
+  
+    Person.findById(request.params.id)
+      .then(person => {
+        if (!person) {
+          return response.status(404).end()
+        }
+  
+        person.name = name
+        person.number = number
+  
+        return person.save().then((updatedPerson) => {
+          response.json(updatedPerson)
+        })
+      })
+      .catch(error => next(error))
+  })
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
